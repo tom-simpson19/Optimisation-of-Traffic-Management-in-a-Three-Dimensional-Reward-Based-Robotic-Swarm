@@ -1,0 +1,418 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(hms)
+library(fastDummies)
+library(tidyverse)
+library(mgcv) 
+library(pbkrtest)
+library(sjPlot)
+library(splines)            # attach package 'splines'
+require(splines) 
+library(MASS)
+```
+
+
+
+
+```{r}
+#20 balls radius 0.1
+data20 <- read.csv("20.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data20v2 <- read.csv("20v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data20v3 <- read.csv("20v3.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data20v4 <- read.csv("20v4.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v20 = seq(1, 20, 1)
+
+#20 balls with radius 0.2
+data20_2_v4 <- read.csv("20_seed4_larger.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data20_2_v3 <- read.csv("20_seed30_larger.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data20_2_v2 <- read.csv("20_seed20_larger.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data20_2_v1 <- read.csv("20_seed10.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+
+#30 balls with radius 0.1
+data30 <- read.csv("30.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data30v2 <- read.csv("30v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data30v3 <- read.csv("30v3.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data30v4 <- read.csv("30v4.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v30 = seq(1, 30, 1)
+
+#30 balls with radius 0.2
+data30_2_v1 <- read.csv("30_larger_v1.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data30_2_v2 <- read.csv("30_larger_v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data30_2_v3 <- read.csv("30_seed3_v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data30_2_v4 <- read.csv("30_seed4_v4.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+
+#40 balls with radius 0.1
+data40 <- read.csv("40.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data40v2 <- read.csv("40v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data40v3 <- read.csv("40v3.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data40v4 <- read.csv("40v4.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+
+#40 balls with radius 0.2
+data40v1_2 <- read.csv("40_largerv1.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data40v2_2 <- read.csv("40_largerv2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data40v3_2 <- read.csv("40_largerv3.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v40 = seq(1, 40, 1)
+data40v4_2 <- read.csv("40_largerv4.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v40 = seq(1, 40, 1)
+
+#50 balls with radius 0.1
+data50 <- read.csv("50.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data50v2 <- read.csv("50v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v50 = seq(1, 50, 1)
+data50v3 <- read.csv("50v3.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+data50v4 <- read.csv("50_v4.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+
+#50 balls with radius 0.2
+data50v3_v2 <- read.csv("50seed3_v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v50 = seq(1, 50, 1)
+data50v4_v2 <- read.csv("50seed4_v2.csv", header = FALSE, sep = ",", stringsAsFactors =  FALSE, fileEncoding="UTF-8-BOM")
+v50 = seq(1, 50, 1)
+```
+
+This section assigns numbers 1-n_balls in the system for each dataframe
+```{r}
+data20 <- mutate(data20, v20)
+data20v2 <- mutate(data20v2, v20)
+data20v3 <- mutate(data20v3, v20)
+data20v4 <- mutate(data20v4, v20)
+
+data20_2_v1 <- mutate(data20_2_v1, v20)
+data20_2_v2 <- mutate(data20_2_v2, v20)
+data20_2_v3 <- mutate(data20_2_v3, v20)
+data20_2_v4 <- mutate(data20_2_v4, v20)
+
+data30 <- mutate(data30, v30)
+data30v2 <- mutate(data30v2, v30)
+data30v3 <- mutate(data30v3, v30)
+data30v4 <- mutate(data30v4, v30)
+
+data30_2_v1 <- mutate(data30_2_v1, v30)
+data30_2_v2 <- mutate(data30_2_v2, v30)
+data30_2_v3 <- mutate(data30_2_v3, v30)
+data30_2_v4 <- mutate(data30_2_v4, v30)
+
+data40 <- mutate(data40, v40)
+data40v2 <- mutate(data40v2, v40)
+data40v3 <- mutate(data40v3, v40)
+data40v4 <- mutate(data40v4, v40)
+
+data40v1_2 <- mutate(data40v1_2, v40)
+data40v2_2 <- mutate(data40v2_2, v40)
+data40v3_2 <- mutate(data40v3_2, v40)
+data40v4_2 <- mutate(data40v4_2, v40)
+
+data50 <- mutate(data50, v50)
+data50v2 <- mutate(data50v2, v50)
+data50v3 <- mutate(data50v3, v50)
+data50v4 <- mutate(data50v4, v50)
+```
+
+The following sections performn ANOVA on each of the dataframe to find the associated P-value
+```{r}
+#radius 0.1
+res.aov2 <- aov(data20$V1 ~ ., data = data20)
+# Summary of the analysis
+anova(res.aov2)
+plot(res.aov2, 1)
+plot(res.aov2, 2)
+
+res.aov2_2 <- aov(data20v2$V1 ~ ., data = data20v2)
+# Summary of the analysis
+summary(res.aov2_2)
+plot(res.aov2_2, 1)
+plot(res.aov2_2, 2)
+
+res.aov2_3 <- aov(data20v3$V1 ~ ., data = data20v3)
+# Summary of the analysis
+summary(res.aov2_3)
+plot(res.aov2_3, 1)
+plot(res.aov2_3, 2)
+res.aov2_4 <- aov(data20v4$V1 ~ ., data = data20v4)
+# Summary of the analysis
+summary(res.aov2_4)
+plot(res.aov2_4, 1)
+plot(res.aov2_4, 2)
+```
+
+
+```{r}
+#radius 0.2
+res.aov2_4 <- aov(data20_2_v4$V1 ~ ., data = data20_2_v4)
+# Summary of the analysis
+anova(res.aov2_4)
+plot(res.aov2_4, 1)
+plot(res.aov2_4, 2)
+
+res.aov2_3 <- aov(data20_2_v3$V1 ~ ., data = data20_2_v3)
+# Summary of the analysis
+anova(res.aov2_3)
+plot(res.aov2_3, 1)
+plot(res.aov2_3, 2)
+
+res.aov2_2 <- aov(data20_2_v2$V1 ~ ., data = data20_2_v2)
+# Summary of the analysis
+anova(res.aov2_2)
+plot(res.aov2_2, 1)
+plot(res.aov2_2, 2)
+
+res.aov2_1 <- aov(data20_2_v1$V1 ~ ., data = data20_2_v1)
+# Summary of the analysis
+anova(res.aov2_1)
+plot(res.aov2_1, 1)
+plot(res.aov2_1, 2)
+```
+
+
+```{r}
+res.aov3 <- aov(data30$V1 ~ ., data = data30)
+# Summary of the analysis
+summary(res.aov3)
+plot(res.aov3, 1)
+plot(res.aov3, 2)
+
+res.aov3_2 <- aov(data30v2$V1 ~ ., data = data30v2)
+# Summary of the analysis
+summary(res.aov3_2)
+plot(res.aov3_2, 1)
+plot(res.aov3_2, 2)
+
+res.aov3_3 <- aov(data30v3$V1 ~ ., data = data30v3)
+# Summary of the analysis
+summary(res.aov3_3)
+plot(res.aov3_3, 1)
+plot(res.aov3_3, 2)
+
+res.aov3_4 <- aov(data30v4$V1 ~ ., data = data30v4)
+# Summary of the analysis
+summary(res.aov3_4)
+plot(res.aov3_4, 1)
+plot(res.aov3_4, 2)
+
+```
+```{r}
+res.aov3_1 <- aov(data30_2_v1$V1 ~ ., data = data30_2_v1)
+# Summary of the analysis
+summary(res.aov3_1)
+plot(res.aov3_1, 1)
+plot(res.aov3_1, 2)
+
+res.aov3_2 <- aov(data30_2_v2$V1 ~ ., data = data30_2_v2)
+# Summary of the analysis
+summary(res.aov3_2)
+plot(res.aov3_2, 1)
+plot(res.aov3_2, 2)
+
+res.aov3_3 <- aov(data30_2_v3$V1 ~ ., data = data30_2_v3)
+# Summary of the analysis
+summary(res.aov3_3)
+plot(res.aov3_3, 1)
+plot(res.aov3_3, 2)
+
+res.aov3_4 <- aov(data30_2_v4$V1 ~ ., data = data30_2_v4)
+# Summary of the analysis
+summary(res.aov3_4)
+plot(res.aov3_4, 1)
+plot(res.aov3_4, 2)
+```
+
+
+```{r}
+res.aov4 <- aov(data40$V1 ~ ., data = data40)
+# Summary of the analysis
+summary(res.aov4)
+plot(res.aov4, 1)
+plot(res.aov4, 2)
+
+res.aov4_v2 <- aov(data40v2$V1 ~ ., data = data40v2)
+# Summary of the analysis
+summary(res.aov4_v2)
+plot(res.aov4_v2, 1)
+plot(res.aov4_v2, 2)
+
+res.aov4_v3 <- aov(data40v3$V1 ~ ., data = data40v3)
+# Summary of the analysis
+summary(res.aov4_v3)
+plot(res.aov4_v3, 1)
+plot(res.aov4_v3, 2)
+
+res.aov4_v4 <- aov(data40v4$V1 ~ ., data = data40v4)
+# Summary of the analysis
+summary(res.aov4_v4)
+plot(res.aov4_v4, 1)
+plot(res.aov4_v4, 2)
+```
+```{r}
+res.aov4_v1_2 <- aov(data40v1_2$V1 ~ ., data = data40v1_2)
+# Summary of the analysis
+summary(res.aov4_v1_2)
+plot(res.aov4_v1_2, 1)
+plot(res.aov4_v1_2, 2)
+
+res.aov4_v2_2 <- aov(data40v2_2$V1 ~ ., data = data40v2_2)
+# Summary of the analysis
+summary(res.aov4_v2_2)
+plot(res.aov4_v2_2, 1)
+plot(res.aov4_v2_2, 2)
+
+res.aov4_v3_2 <- aov(data40v3_2$V1 ~ ., data = data40v3_2)
+# Summary of the analysis
+summary(res.aov4_v3_2)
+plot(res.aov4_v3_2, 1)
+plot(res.aov4_v3_2, 2)
+
+res.aov4_v4_2 <- aov(data40v4_2$V1 ~ ., data = data40v4_2)
+# Summary of the analysis
+summary(res.aov4_v4_2)
+plot(res.aov4_v4_2, 1)
+plot(res.aov4_v4_2, 2)
+```
+
+
+```{r}
+res.aov5 <- aov(data50$V1 ~ ., data = data50)
+# Summary of the analysis
+summary(res.aov5)
+plot(res.aov5, 1)
+plot(res.aov5, 2)
+
+res.aov5_v2 <- aov(data50v2$V1 ~ ., data = data50v2)
+# Summary of the analysis
+summary(res.aov5_v2)
+plot(res.aov5_v2, 1)
+plot(res.aov5_v2, 2)
+
+res.aov5_v3 <- aov(data50v3$V1 ~ ., data = data50v3)
+# Summary of the analysis
+summary(res.aov5_v3)
+plot(res.aov5_v3, 1)
+plot(res.aov5_v3, 2)
+
+res.aov5_v4 <- aov(data50v4$V1 ~ ., data = data50v4)
+# Summary of the analysis
+summary(res.aov5_v4)
+plot(res.aov5_v4, 1)
+plot(res.aov5_v4, 2)
+```
+
+Calculate the standard error funtion
+```{r}
+se <- function(x) sqrt(var(x)/length(x))
+```
+
+Standard error for seed 10
+```{r}
+#bind all the dataframes of the same objects numbers together
+df201 <- rbind(data20, data20v2, data20v3, data20v4)
+df301 <- rbind(data30, data30v2, data30v3, data30v4)
+df401 <- rbind(data40, data40v2, data40v3, data40v4)
+df501 <- rbind(data50, data50v2, data50v3, data50v4)
+
+df202 <- rbind(data20_2_v1, data20_2_v2, data20_2_v3, data20_2_v4)
+df302 <- rbind(data30_2_v1, data30_2_v1, data30_2_v1, data30_2_v1)
+df402 <- rbind(data40v1_2, data40v2_2, data40v3_2, data40v4_2)
+#df502 <- rbind(data50_2_v1, data50_2_v1, data50_2_v1, data50_2_v1)
+
+```
+
+
+```{r}
+#Calculate standard error of each dataframe for object radius 0.1
+se_20 = se(df201$V1)
+#95% confidence interval
+me_20 <- qt(.975,length(df201$V1)-1)*sd(df201$V1)/sqrt(length(df201$V1))
+me_20 <- me_20 * length(df201$V1)
+  
+se_30 = se(df301$V1)
+#95% confidence interval
+me_30  <- qt(.975,length(df301$V1)-1)*sd(df301$V1)/sqrt(length(df301$V1))
+me_30 <- me_30 *length(df301$V1)
+
+se_40 = se(df401$V1)
+#95% confidence interval
+me_40  <- qt(.975,length(df401$V1)-1)*sd(df401$V1)/sqrt(length(df401$V1))
+me_40 <- me_40 *length(df401$V1)
+
+se_50 = se(df501$V1)
+#95% confidence interval
+me_50  <- qt(.975,length(df501$V1)-1)*sd(df501$V1)/sqrt(length(df501$V1))
+me_50 <- me_50 *length(df501$V1)
+
+number_objects = c(20, 30, 40, 50)
+radius = c(0.1)
+mean_list = c(mean(df201$V1), mean(df301$V1), mean(df401$V1), mean(df501$V1))
+sum_list = c(sum(df201$V1), sum(df301$V1), sum(df401$V1), sum(df501$V1))
+#Define a list of standard errors
+error_list = c(se_20, se_30, se_40, se_50)
+interval_list = c(me_20, me_30, me_40, me_50)
+dataframe10 = cbind.data.frame(number_objects, mean_list, error_list)
+dataframe10 = mutate(dataframe10, radius, interval_list)
+dataframe10_sum = cbind.data.frame(number_objects, sum_list, error_list)
+dataframe10_sum = mutate(dataframe10_sum, radius)
+
+
+#Calculate standard error of each dataframe for object radius 0.1
+se_20v2 = se(data20v2$V1)
+#95% confidence interval
+me_202 <- qt(.975,length(df202$V1)-1)*sd(df202$V1)/sqrt(length(df202$V1))
+me_202 <- me_202 * length(df202$V1)
+
+se_30v2 = se(data30v2$V1)
+#95% confidence interval
+me_302  <- qt(.975,length(df302$V1)-1)*sd(df302$V1)/sqrt(length(df302$V1))
+me_302 <- me_302 *length(df302$V1)
+
+se_40v2 = se(data40v2$V1)
+#95% confidence interval
+me_402  <- qt(.975,length(df402$V1)-1)*sd(df402$V1)/sqrt(length(df402$V1))
+me_402 <- me_402 *length(df402$V1)
+
+#se_50v2 = se(data50v2$V1)
+
+
+number_objects = c(20, 30, 40)#, 50)
+radius = c(0.2)
+mean_list = c(mean(df202$V1), mean(df302$V1), mean(df402$V1))#, mean(data50v2$V1))
+sum_list = c(sum(df202$V1), sum(df302$V1), sum(df402$V1))#, sum(data50v2$V1))
+error_list = c(se_20v2, se_30v2, se_40v2)#, se_50v2)
+interval_list = c(me_202, me_302, me_402)#, me_502)
+dataframe20 = cbind.data.frame(number_objects, mean_list, error_list)
+dataframe20 = mutate(dataframe20, radius, interval_list)
+dataframe20_sum = cbind.data.frame(number_objects, sum_list, error_list)
+dataframe20_sum = mutate(dataframe20_sum, radius)
+
+
+datacombined = rbind(dataframe10, dataframe20)
+
+
+datacombined_sum = rbind(dataframe10_sum, dataframe20_sum)
+
+datacombined_sum = mutate(datacombined_sum, ratio = (number_objects*(radius^3)))
+
+datacombined$radius = as.factor(datacombined$radius)
+datacombined_sum$radius = as.factor(datacombined_sum$radius)
+
+#Plot graph of the overall mean score vs number objects for each radius size
+pd <- position_dodge(0.1) # move them .05 to the left and right
+ggplot(datacombined, aes(x=number_objects, y=mean_list, group=radius, colour = radius,)) + 
+    geom_errorbar(aes(ymin=mean_list-error_list, ymax=mean_list+error_list), width=.1, position=pd) +
+    geom_line(position=pd) +
+    geom_point(position=pd) + xlab("Number of objects") + ylab("Mean score of the objects")
+
+#Plot sum scores of all objects in the system vs n objects for each raidus values
+ggplot(datacombined_sum, aes(x=number_objects, y=sum_list, group=radius, colour = radius)) + 
+    geom_errorbar(aes(ymin=sum_list-interval_list, ymax=sum_list+interval_list), width=.1, position=pd) +
+    geom_line(position=pd) +
+    geom_point(position=pd) + xlab("Number of objects") + ylab("Sum score of all objects in the system")
+#+ geom_smooth(aes(group=radius), method = "lm")
+
+#Exploring the mean score per volume density
+ggplot(datacombined_sum, aes(x=ratio, y=sum_list, group=radius, colour = radius)) +
+    geom_line() +
+    geom_point() + xlab("Volume density") + ylab("Sum score of all objects in the system")#+ scale_x_continuous(trans='log10')
+```
+
